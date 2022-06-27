@@ -1,7 +1,7 @@
 ---
 title: "Fuzzy Regression Discontinuity"
 author: "Megha"
-format: html
+format: pdf
 editor: visual
 ---
 
@@ -213,7 +213,7 @@ estimate_mcate <- function(dat = summer_school,
 mcate_hand <- estimate_mcate()
 
 mcate_hand %>%
-  kable(format = "html", caption = "MCATE Results") %>%
+  kable(format = "latex", caption = "MCATE Results") %>%
   kable_styling(c("striped", "bordered"),  full_width = F)
 ```
 
@@ -258,7 +258,7 @@ mcate_results <-
 mcate_results %>%
   filter(Coef == "attend_SS") %>%
   arrange(poly) %>%
-  kable(format = "html", caption = "Sensitivity for MCATE") %>%
+  kable(format = "latex", caption = "Sensitivity for MCATE") %>%
   kable_styling(c("striped", "bordered"),  full_width = F)
 ```
 

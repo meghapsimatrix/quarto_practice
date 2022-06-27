@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-0.9.538">
+<meta name="generator" content="quarto-0.9.611">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -129,7 +129,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <section id="regression-discontinuity" class="level2">
 <h2 class="anchored" data-anchor-id="regression-discontinuity">Regression Discontinuity</h2>
-<p>Assignment to the treatment group is determined through a cut score (e.g., 4000 on Algebra I end of course STAAR scale scores). People above the cut score take and complete Algebra II (treatment) and people below don’t (control). The idea behind RDD is that people right around the cut-score and randomly above or below—like they have been randomly assigned to treatment or control. External validity will be limited because we can only estimate average treatment effect for people near the cut-off. We can’t say what the effect of the treatment is for all the students without extrapolating.</p>
+<p>Assignment to the treatment group is determined through a cut score (e.g., 4000 on Algebra I end of course STAAR scale scores). People above the cut score take and complete Algebra II (treatment) and people below don’t (control). The idea behind RDD is that people right around the cut-score are randomly above or below—like they have been randomly assigned to treatment or control. External validity will be limited because we can only estimate average treatment effect for people near the cut-off. We can’t say what the effect of the treatment is for all the students without extrapolating.</p>
 <section id="sharp-rdd" class="level3">
 <h3 class="anchored" data-anchor-id="sharp-rdd">Sharp RDD</h3>
 <p>If all people above cut-score took and completed Algebra II, and all those below didn’t we would have perfect compliance. We basically need to worry only about who is assigned to treatment versus control.</p>
@@ -200,7 +200,7 @@ $ ITBS_read_97 &lt;dbl&gt; -0.364692207, 0.252508945, -0.850805689, 0.002452996,
 <span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">fill =</span> <span class="st">"Assigned"</span>) <span class="sc">+</span></span>
 <span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="rdd_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="672"></p>
+<p><img src="rdd_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid" width="672"></p>
 </div>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># formal test</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">rddensity</span>(summer_school<span class="sc">$</span>ITBS_read_96, <span class="at">c =</span> cutscore))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -240,24 +240,23 @@ Window Length / 2          &lt;c     &gt;=c    P&gt;|T|
 0.079                     111     117    0.7406</code></pre>
 </div>
 </div></li>
-<li><p>Check if people near cut-off are close to randomized. Check baseline equivalence.</p></li>
+<li><p>Check if people near cut-off are close to randomized. Check baseline equivalence. Skipping this for now but basically need to run smds on any baseline covariates and compare treatment and control group within some bandwidth.</p></li>
 </ol>
 </section>
 <section id="analysis" class="level4">
 <h4 class="anchored" data-anchor-id="analysis">Analysis</h4>
-<p>For sharp RDD, the following code will select optimal bandwidth and runs the RDD analysis:</p>
+<p>For sharp RDD, the following code will select optimal bandwidth and run the RDD analysis. I am specifying <code>-Fi</code> below because in our cause people below the cut-point are treatment, and the default for <code>rdrobust</code> is that people above the cut-off is treatment (which is true for HB5 as people above 4000 score is treatment - taking and completing Algebra II).</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>mitt <span class="ot">&lt;-</span> <span class="fu">with</span>(summer_school, </span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>             <span class="fu">rdrobust</span>(<span class="at">y =</span> ITBS_read_97, </span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>                      <span class="at">x =</span> <span class="sc">-</span>Fi, </span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>                      <span class="at">c=</span> <span class="dv">0</span>, </span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>                      <span class="at">p =</span> <span class="dv">1</span>,</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>                      <span class="at">vce =</span> <span class="st">"hc2"</span>,</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>                      <span class="at">cluster =</span> school))</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mitt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>             <span class="fu">rdrobust</span>(<span class="at">y =</span> ITBS_read_97, <span class="co"># the outcome variable</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>                      <span class="at">x =</span> <span class="sc">-</span>Fi, <span class="co"># cut score or forcing variable</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>                      <span class="at">c =</span> <span class="dv">0</span>, <span class="co"># the cut point which is 0 because we centered it</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>                      <span class="at">vce =</span> <span class="st">"hc2"</span>, <span class="co"># heteroskedasticity consistent</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>                      <span class="at">cluster =</span> school)) <span class="co"># cluster robust</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mitt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Call: rdrobust
+<pre><code>Sharp RD estimates using local polynomial regression.
 
 Number of Obs.                 4678
 BW type                       mserd
@@ -285,27 +284,26 @@ Unique Obs.                    3416         1262
 </section>
 <section id="fuzzy-rdd-1" class="level3">
 <h3 class="anchored" data-anchor-id="fuzzy-rdd-1">Fuzzy RDD</h3>
-<p>If there isn’t prefect compliance, you would run fuzzy rdd like below. With the cut score as the instrument in the instrumental variable regression, actually attending the summer school as the treatment. The <code>rdrobust()</code> function runs two stage least squares regression.</p>
+<p>If there isn’t prefect compliance, you would run fuzzy RDD like below. With the cut score as the instrument in the instrumental variable regression, actually attending the summer school as the treatment. The <code>rdrobust()</code> function runs two stage least squares regression.</p>
 <section id="assumptions-1" class="level4">
 <h4 class="anchored" data-anchor-id="assumptions-1">Assumptions</h4>
 <p>Here for fuzzy you need to check assumptions for instrumental variables regression as well as those for RDD. The assumptions are local because for RDD we are only estimating effects for students near the cutoff.</p>
 <ol type="1">
 <li><p>Local exclusion restriction - Instrument does not have any effect on outcome other than through treatment. This one we check theoretically.</p></li>
-<li><p>Local monotonicity - No defiers.</p></li>
+<li><p>Local monotonicity - No <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4669963/">defiers</a>. We also check this theoretically.</p></li>
 <li><p>Treatment effectiveness - Being assigned to treatment increases the probability of treatment receipt. You check that by regressing treatment receipt <code>attend_SS</code> on treatment assignment <code>-Fi</code>, the forcing variable. Below is the first stage test:</p></li>
 </ol>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>first_stage <span class="ot">&lt;-</span> <span class="fu">with</span>(summer_school, </span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">rdrobust</span>(<span class="at">y =</span> attend_SS, </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">rdrobust</span>(<span class="at">y =</span> attend_SS, <span class="co"># attend_SS instead of the outcome</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>                             <span class="at">x =</span> <span class="sc">-</span>Fi, </span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>                             <span class="at">c =</span> <span class="dv">0</span>, </span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>                             <span class="at">p =</span> <span class="dv">1</span>,</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>                             <span class="at">vce =</span> <span class="st">"hc2"</span>,</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>                             <span class="at">cluster =</span> school))</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(first_stage)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>                             <span class="at">vce =</span> <span class="st">"hc2"</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>                             <span class="at">cluster =</span> school))</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(first_stage)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Call: rdrobust
+<pre><code>Sharp RD estimates using local polynomial regression.
 
 Number of Obs.                 4678
 BW type                       mserd
@@ -335,18 +333,17 @@ Unique Obs.                    3416         1262
 <p>Below is the code to run fuzzy RDD using <code>rdrobust()</code>:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>mcate <span class="ot">&lt;-</span> <span class="fu">with</span>(summer_school, </span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>              <span class="fu">rdrobust</span>(<span class="at">y =</span> ITBS_read_97, </span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>              <span class="fu">rdrobust</span>(<span class="at">y =</span> ITBS_read_97, <span class="co"># the outcome is back to the 97 test score</span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>                       <span class="at">x =</span> <span class="sc">-</span>Fi, </span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>                       <span class="at">c =</span> <span class="dv">0</span>,</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>                       <span class="at">p =</span> <span class="dv">1</span>,</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>                       <span class="at">fuzzy =</span> attend_SS, </span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>                       <span class="at">vce =</span> <span class="st">"hc2"</span>,</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>                       <span class="at">cluster =</span> school))</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>                       <span class="at">fuzzy =</span> attend_SS, <span class="co"># here we are adding attend to fuzzy</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>                       <span class="at">vce =</span> <span class="st">"hc2"</span>,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>                       <span class="at">cluster =</span> school))</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mcate)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mcate)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Call: rdrobust
+<pre><code>Fuzzy RD estimates using local polynomial regression.
 
 Number of Obs.                 4678
 BW type                       mserd
@@ -361,6 +358,17 @@ BW est. (h)                   0.747        0.747
 BW bias (b)                   1.063        1.063
 rho (h/b)                     0.703        0.703
 Unique Obs.                    3416         1262
+
+First-stage estimates.
+
+=============================================================================
+        Method     Coef. Std. Err.         z     P&gt;|z|      [ 95% C.I. ]       
+=============================================================================
+  Conventional     0.767     0.027    28.190     0.000     [0.714 , 0.820]     
+        Robust         -         -    22.185     0.000     [0.688 , 0.821]     
+=============================================================================
+
+Treatment effect estimates.
 
 =============================================================================
         Method     Coef. Std. Err.         z     P&gt;|z|      [ 95% C.I. ]       
@@ -381,7 +389,7 @@ Unique Obs.                    3416         1262
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>                           <span class="at">poly =</span> <span class="dv">1</span>, </span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">factor_mag =</span> <span class="dv">1</span>){</span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># select optimal weights for any polynomial   </span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># select optimal bandwidth for any polynomial   </span></span>
 <span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  b <span class="ot">&lt;-</span> <span class="fu">with</span>(dat,</span>
 <span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>            <span class="fu">rdbwselect</span>(<span class="at">y =</span> ITBS_read_97,</span>
 <span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>                       <span class="at">x =</span> Fi,</span>
@@ -507,36 +515,81 @@ Unique Obs.                    3416         1262
 
 </div>
 </div>
-<p>The <code>attend_SS</code> coef matches the one from <code>rdrobust()</code> above.</p>
+<p>The <code>attend_SS</code> coef is very similar to the one from <code>rdrobust()</code> above. Some small discrepancy in estimation probably - if you take out the cluster in <code>rdrobust()</code> the coefs match like below (something to look into because clustered se’s shouldn’t impact the coefficient but don’t worry about this now :D ):</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>mcate_2 <span class="ot">&lt;-</span> <span class="fu">with</span>(summer_school, </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>              <span class="fu">rdrobust</span>(<span class="at">y =</span> ITBS_read_97, <span class="co"># the outcome is back to the 97 test score</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>                       <span class="at">x =</span> <span class="sc">-</span>Fi, </span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>                       <span class="at">c =</span> <span class="dv">0</span>,</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>                       <span class="at">fuzzy =</span> attend_SS, <span class="co"># here we are adding attend to fuzzy</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>                       <span class="at">vce =</span> <span class="st">"hc2"</span>))</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mcate_2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Fuzzy RD estimates using local polynomial regression.
+
+Number of Obs.                 4678
+BW type                       mserd
+Kernel                   Triangular
+VCE method                      HC2
+
+Number of Obs.                 3416         1262
+Eff. Number of Obs.            1283          826
+Order est. (p)                    1            1
+Order bias  (q)                   2            2
+BW est. (h)                   0.711        0.711
+BW bias (b)                   1.085        1.085
+rho (h/b)                     0.655        0.655
+Unique Obs.                    3416         1262
+
+First-stage estimates.
+
+=============================================================================
+        Method     Coef. Std. Err.         z     P&gt;|z|      [ 95% C.I. ]       
+=============================================================================
+  Conventional     0.766     0.030    25.308     0.000     [0.707 , 0.826]     
+        Robust         -         -    20.567     0.000     [0.683 , 0.827]     
+=============================================================================
+
+Treatment effect estimates.
+
+=============================================================================
+        Method     Coef. Std. Err.         z     P&gt;|z|      [ 95% C.I. ]       
+=============================================================================
+  Conventional     0.124     0.073     1.703     0.089    [-0.019 , 0.267]     
+        Robust         -         -     1.054     0.292    [-0.080 , 0.266]     
+=============================================================================</code></pre>
+</div>
+</div>
 <section id="sensitivity" class="level3">
 <h3 class="anchored" data-anchor-id="sensitivity">Sensitivity</h3>
 <p>When running RDD, we need to check if results are robust to different bandwidths and different polynomial specifications. Below is the code to do that:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># different polynomial and bandwidth specifications</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>design_factors <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">poly =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>),</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">factor_mag =</span> <span class="fu">c</span>(.<span class="dv">5</span>, <span class="dv">1</span>, <span class="dv">2</span>)</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>) </span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co"># combine into a design set</span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>params <span class="ot">&lt;-</span></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cross_df</span>(design_factors) </span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co"># run sensitivity analysis</span></span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>mcate_results <span class="ot">&lt;-</span> </span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    params <span class="sc">%&gt;%</span></span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">res =</span> <span class="fu">pmap</span>(., <span class="at">.f =</span> estimate_mcate)</span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unnest</span>(<span class="at">cols =</span> res)</span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="co"># clean the results</span></span>
-<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>mcate_results <span class="sc">%&gt;%</span></span>
-<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Coef <span class="sc">==</span> <span class="st">"attend_SS"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(poly) <span class="sc">%&gt;%</span></span>
-<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">format =</span> <span class="st">"html"</span>, <span class="at">caption =</span> <span class="st">"Sensitivity for MCATE"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"bordered"</span>),  <span class="at">full_width =</span> F)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># different polynomial and bandwidth specifications</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>design_factors <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">poly =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>),</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">factor_mag =</span> <span class="fu">c</span>(.<span class="dv">5</span>, <span class="dv">1</span>, <span class="dv">2</span>)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>) </span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="co"># combine into a design set</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>params <span class="ot">&lt;-</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cross_df</span>(design_factors) </span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="co"># run sensitivity analysis</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>mcate_results <span class="ot">&lt;-</span> </span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    params <span class="sc">%&gt;%</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">res =</span> <span class="fu">pmap</span>(., <span class="at">.f =</span> estimate_mcate)</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unnest</span>(<span class="at">cols =</span> res)</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a><span class="co"># clean the results</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>mcate_results <span class="sc">%&gt;%</span></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Coef <span class="sc">==</span> <span class="st">"attend_SS"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(poly) <span class="sc">%&gt;%</span></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">format =</span> <span class="st">"html"</span>, <span class="at">caption =</span> <span class="st">"Sensitivity for MCATE"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"bordered"</span>),  <span class="at">full_width =</span> F)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 
 <table class="table table-striped table-bordered" style="width: auto !important; margin-left: auto; margin-right: auto;">

@@ -7,7 +7,7 @@ editor: visual
 
 ## Regression Discontinuity
 
-Assignment to the treatment group is determined through a cut score (e.g., 4000 on Algebra I end of course STAAR scale scores). People above the cut score take and complete Algebra II (treatment) and people below don't (control). The idea behind RDD is that people right around the cut-score and randomly above or below---like they have been randomly assigned to treatment or control. External validity will be limited because we can only estimate average treatment effect for people near the cut-off. We can't say what the effect of the treatment is for all the students without extrapolating.
+Assignment to the treatment group is determined through a cut score (e.g., 4000 on Algebra I end of course STAAR scale scores). People above the cut score take and complete Algebra II (treatment) and people below don't (control). The idea behind RDD is that people right around the cut-score are randomly above or below---like they have been randomly assigned to treatment or control. External validity will be limited because we can only estimate average treatment effect for people near the cut-off. We can't say what the effect of the treatment is for all the students without extrapolating.
 
 ### Sharp RDD
 
@@ -82,27 +82,26 @@ Before we run RDD, we should check some assumptions.
     summary(rddensity(summer_school$ITBS_read_96, c = cutscore))
     ```
 
-2.  Check if people near cut-off are close to randomized. Check baseline equivalence.
+2.  Check if people near cut-off are close to randomized. Check baseline equivalence. Skipping this for now but basically need to run smds on any baseline covariates and compare treatment and control group within some bandwidth.
 
 #### Analysis
 
-For sharp RDD, the following code will select optimal bandwidth and runs the RDD analysis:
+For sharp RDD, the following code will select optimal bandwidth and run the RDD analysis. I am specifying `-Fi` below because in our cause people below the cut-point are treatment, and the default for `rdrobust` is that people above the cut-off is treatment (which is true for HB5 as people above 4000 score is treatment - taking and completing Algebra II).
 
 ```{r}
 mitt <- with(summer_school, 
-             rdrobust(y = ITBS_read_97, 
-                      x = -Fi, 
-                      c= 0, 
-                      p = 1,
-                      vce = "hc2",
-                      cluster = school))
+             rdrobust(y = ITBS_read_97, # the outcome variable
+                      x = -Fi, # cut score or forcing variable
+                      c = 0, # the cut point which is 0 because we centered it
+                      vce = "hc2", # heteroskedasticity consistent
+                      cluster = school)) # cluster robust
 
 summary(mitt)
 ```
 
 ### Fuzzy RDD
 
-If there isn't prefect compliance, you would run fuzzy rdd like below. With the cut score as the instrument in the instrumental variable regression, actually attending the summer school as the treatment. The `rdrobust()` function runs two stage least squares regression.
+If there isn't prefect compliance, you would run fuzzy RDD like below. With the cut score as the instrument in the instrumental variable regression, actually attending the summer school as the treatment. The `rdrobust()` function runs two stage least squares regression.
 
 #### Assumptions
 
@@ -110,16 +109,15 @@ Here for fuzzy you need to check assumptions for instrumental variables regressi
 
 1.  Local exclusion restriction - Instrument does not have any effect on outcome other than through treatment. This one we check theoretically.
 
-2.  Local monotonicity - No defiers.
+2.  Local monotonicity - No [defiers](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4669963/). We also check this theoretically.
 
 3.  Treatment effectiveness - Being assigned to treatment increases the probability of treatment receipt. You check that by regressing treatment receipt `attend_SS` on treatment assignment `-Fi`, the forcing variable. Below is the first stage test:
 
 ```{r}
 first_stage <- with(summer_school, 
-                    rdrobust(y = attend_SS, 
+                    rdrobust(y = attend_SS, # attend_SS instead of the outcome
                              x = -Fi, 
                              c = 0, 
-                             p = 1,
                              vce = "hc2",
                              cluster = school))
 
@@ -132,11 +130,10 @@ Below is the code to run fuzzy RDD using `rdrobust()`:
 
 ```{r}
 mcate <- with(summer_school, 
-              rdrobust(y = ITBS_read_97, 
+              rdrobust(y = ITBS_read_97, # the outcome is back to the 97 test score
                        x = -Fi, 
                        c = 0,
-                       p = 1,
-                       fuzzy = attend_SS, 
+                       fuzzy = attend_SS, # here we are adding attend to fuzzy
                        vce = "hc2",
                        cluster = school))
 
@@ -153,7 +150,7 @@ estimate_mcate <- function(dat = summer_school,
                            poly = 1, 
                            factor_mag = 1){
   
-  # select optimal weights for any polynomial   
+  # select optimal bandwidth for any polynomial   
   b <- with(dat,
             rdbwselect(y = ITBS_read_97,
                        x = Fi,
@@ -220,7 +217,18 @@ mcate_hand %>%
   kable_styling(c("striped", "bordered"),  full_width = F)
 ```
 
-The `attend_SS` coef matches the one from `rdrobust()` above.
+The `attend_SS` coef is very similar to the one from `rdrobust()` above. Some small discrepancy in estimation probably - if you take out the cluster in `rdrobust()` the coefs match like below (something to look into because clustered se's shouldn't impact the coefficient but don't worry about this now :D ):
+
+```{r}
+mcate_2 <- with(summer_school, 
+              rdrobust(y = ITBS_read_97, # the outcome is back to the 97 test score
+                       x = -Fi, 
+                       c = 0,
+                       fuzzy = attend_SS, # here we are adding attend to fuzzy
+                       vce = "hc2"))
+
+summary(mcate_2)
+```
 
 ### Sensitivity
 

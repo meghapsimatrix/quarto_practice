@@ -1,0 +1,259 @@
+---
+title: "Fuzzy Regression Discontinuity"
+author: "Megha"
+format: html
+editor: visual
+---
+
+## Regression Discontinuity
+
+Assignment to the treatment group is determined through a cut score (e.g., 4000 on Algebra I end of course STAAR scale scores). People above the cut score take and complete Algebra II (treatment) and people below don't (control). The idea behind RDD is that people right around the cut-score and randomly above or below---like they have been randomly assigned to treatment or control. External validity will be limited because we can only estimate average treatment effect for people near the cut-off. We can't say what the effect of the treatment is for all the students without extrapolating.
+
+### Sharp RDD
+
+If all people above cut-score took and completed Algebra II, and all those below didn't we would have perfect compliance. We basically need to worry only about who is assigned to treatment versus control.
+
+### Fuzzy RDD
+
+However, in our case, you can imagine that not all those who scored above the 4000 cut-point would take and complete Algebra II. They are only more likely to do so. And, not all who scored below 4000 never took Algebra II. So we have non-compliance issue.
+
+To deal with non-compliance we combine regular RDD with instrumental variables (IV) regression.
+
+## Example
+
+The following is an example data from Causal class. In the data below (from James's notes):
+
+-   `id`: unique identifier for each family
+
+-   `school`: unique identifier for the student's school
+
+-   `male`: indicator variable equal to one if the student is male
+
+-   `FRL`: indicator variable equal to one if the student is eligible for the free/reduced-price lunch program
+
+-   `ITBS_read_96`: student's score on the reading portion of the Iowa Test of Basic Skills in 3rd grade in 1996. Students scoring less than -1 were assigned to remedial summer school.
+
+-   `attend_SS`: indicator variable equal to one if the student attended summer school
+
+-   `ITBS_read_97`: student's score on the reading portion of the Iowa Test of Basic Skills in 1997
+
+```{r}
+#| warning = FALSE
+library(tidyverse)
+library(rddensity)
+library(rdrobust)
+library(AER)
+library(clubSandwich)
+library(kableExtra)
+
+summer_school <- read_csv("data/summer_school.csv")
+
+glimpse(summer_school)
+```
+
+### Sharp RDD
+
+For now lets assume that everyone below the cut score who were assigned to remedial summer school went to summer school.
+
+#### Assumptions
+
+Before we run RDD, we should check some assumptions.
+
+1.  No tampering of forcing variable. If people who have power to score know about the cut-score beforehand, they could make tamper with the scoring and make more people pass the Algebra I STAAR test (so that districts look good, for example). That is not good for causal inference. So the first step is to check if there is any weird jumps around the cut-off. We create histogram like below and can conclude that there is no evidence of tampering- density is continuous at -1. And, we conduct a formal test using `rddensity()` function and note that the p value greater than .05 so there is not much evidence that density is discontinuous at the cut score.
+
+    ```{r}
+    # the cutscore is -1
+    cutscore <- -1
+
+    # centering the forcing variable on the cutscore so the cutscore is now 0
+    summer_school <- summer_school %>%
+      mutate(Fi = ITBS_read_96 - cutscore,
+             assigned = factor(Fi < 0, exclude = NA))
+
+    # create a histogram
+    ggplot(summer_school, aes(x = ITBS_read_96, fill = factor(assigned))) +
+      geom_histogram(binwidth = .1, center = .15) +
+      geom_vline(xintercept = c(-1), colour = "black") +
+      scale_fill_brewer(type = "qual", palette = 6) + 
+      labs(fill = "Assigned") +
+      theme_minimal()
+
+    # formal test
+    summary(rddensity(summer_school$ITBS_read_96, c = cutscore))
+    ```
+
+2.  Check if people near cut-off are close to randomized. Check baseline equivalence.
+
+#### Analysis
+
+For sharp RDD, the following code will select optimal bandwidth and runs the RDD analysis:
+
+```{r}
+mitt <- with(summer_school, 
+             rdrobust(y = ITBS_read_97, 
+                      x = -Fi, 
+                      c= 0, 
+                      p = 1,
+                      vce = "hc2",
+                      cluster = school))
+
+summary(mitt)
+```
+
+### Fuzzy RDD
+
+If there isn't prefect compliance, you would run fuzzy rdd like below. With the cut score as the instrument in the instrumental variable regression, actually attending the summer school as the treatment. The `rdrobust()` function runs two stage least squares regression.
+
+#### Assumptions
+
+Here for fuzzy you need to check assumptions for instrumental variables regression as well as those for RDD. The assumptions are local because for RDD we are only estimating effects for students near the cutoff.
+
+1.  Local exclusion restriction - Instrument does not have any effect on outcome other than through treatment. This one we check theoretically.
+
+2.  Local monotonicity - No defiers.
+
+3.  Treatment effectiveness - Being assigned to treatment increases the probability of treatment receipt. You check that by regressing treatment receipt `attend_SS` on treatment assignment `-Fi`, the forcing variable. Below is the first stage test:
+
+```{r}
+first_stage <- with(summer_school, 
+                    rdrobust(y = attend_SS, 
+                             x = -Fi, 
+                             c = 0, 
+                             p = 1,
+                             vce = "hc2",
+                             cluster = school))
+
+summary(first_stage)
+```
+
+#### Analysis
+
+Below is the code to run fuzzy RDD using `rdrobust()`:
+
+```{r}
+mcate <- with(summer_school, 
+              rdrobust(y = ITBS_read_97, 
+                       x = -Fi, 
+                       c = 0,
+                       p = 1,
+                       fuzzy = attend_SS, 
+                       vce = "hc2",
+                       cluster = school))
+
+
+summary(mcate)
+```
+
+## Fuzzy RDD by Hand
+
+The following function is what happens under the hood for fuzzy RDD:
+
+```{r}
+estimate_mcate <- function(dat = summer_school, 
+                           poly = 1, 
+                           factor_mag = 1){
+  
+  # select optimal weights for any polynomial   
+  b <- with(dat,
+            rdbwselect(y = ITBS_read_97,
+                       x = Fi,
+                       vce = "hc2",
+                       p = poly,
+                       fuzzy = attend_SS))
+
+  # extract the bandwidth
+  bandwidth <- b$bws[1]
+  
+  # multiply for sensitivity analysis
+  # this will make the bandwidth bigger or smaller
+  bandwidth <- bandwidth * factor_mag
+  
+  # upper and lower bandwidth
+  b_lower <- -bandwidth
+  b_upper <- bandwidth
+  
+  # subset the data to include units within the bandwidth and create weights
+  dat_bw <- subset(dat, b_lower < Fi & Fi < b_upper)
+  dat_bw$tri_wt <- 1 - abs(dat_bw$Fi) / b_upper
+  
+  #  run ivreg based on order of polynomial
+  # however this assumes the outcome is continuous
+  # like rdrobust
+  # but for HB5 most of our outcomes are binary
+  # which is why I think we are getting some wonky estimates
+  
+  
+  if(poly == 1){
+    
+  model <- ivreg(ITBS_read_97 ~ Fi + attend_SS + Fi:assigned | Fi + assigned + Fi:assigned, data = dat_bw, weights = tri_wt)
+  
+  }  else if(poly == 2){
+    
+  model <- ivreg(ITBS_read_97 ~ Fi + I(Fi^2) + attend_SS + Fi:assigned + I(Fi^2):assigned|
+                   Fi + I(Fi^2) + assigned + Fi:assigned + I(Fi^2):assigned, data = dat_bw, weights = tri_wt) 
+  
+  } else if (poly == 3){
+    
+    model <- ivreg(ITBS_read_97 ~ Fi + I(Fi^2) + I(Fi^3) + attend_SS + Fi:assigned + I(Fi^2):assigned + I(Fi^3): assigned|Fi + I(Fi^2) + I(Fi^3) + assigned + Fi:assigned + I(Fi^2):assigned + I(Fi^3): assigned, data = dat_bw, weights = tri_wt) 
+    
+  }
+  
+  # cluster the se by school
+  
+  res <- coef_test(model, 
+                   vcov = "CR2", 
+                   cluster = dat_bw$school, 
+                   tidy = TRUE) %>%
+    mutate(bandwidth = bandwidth)
+  
+  return(res)
+  
+  
+}
+```
+
+```{r}
+mcate_hand <- estimate_mcate()
+
+mcate_hand %>%
+  kable(format = "html", caption = "MCATE Results") %>%
+  kable_styling(c("striped", "bordered"),  full_width = F)
+```
+
+The `attend_SS` coef matches the one from `rdrobust()` above.
+
+### Sensitivity
+
+When running RDD, we need to check if results are robust to different bandwidths and different polynomial specifications. Below is the code to do that:
+
+```{r}
+# different polynomial and bandwidth specifications
+design_factors <- list(
+  poly = c(1, 2, 3),
+  factor_mag = c(.5, 1, 2)
+  
+) 
+
+# combine into a design set
+params <-
+  cross_df(design_factors) 
+
+# run sensitivity analysis
+mcate_results <- 
+    params %>%
+    mutate(
+      res = pmap(., .f = estimate_mcate)
+    ) %>%
+    unnest(cols = res)
+
+# clean the results
+mcate_results %>%
+  filter(Coef == "attend_SS") %>%
+  arrange(poly) %>%
+  kable(format = "html", caption = "Sensitivity for MCATE") %>%
+  kable_styling(c("striped", "bordered"),  full_width = F)
+```
+
+## HB5
+
+For HB5, the coefficients are looking wonky. The outcomes are binary so the linear probability model should give difference in proportion (e.g., of those who graduate after HB5 vs those who do before). But, I am getting proportions greater than 1 or less than 0 for some models. So need to figure out what is going wrong. One possibility is that linear probability ivreg is not working for the binary outcomes so we need to mess with the function above to run iv probit or iv logit.

@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-0.9.538">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Megha">
+
+<title>Fuzzy Regression Discontinuity</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="rdd_files/libs/clipboard/clipboard.min.js"></script>
+<script src="rdd_files/libs/quarto-html/quarto.js"></script>
+<script src="rdd_files/libs/quarto-html/popper.min.js"></script>
+<script src="rdd_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="rdd_files/libs/quarto-html/anchor.min.js"></script>
+<link href="rdd_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="rdd_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="rdd_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="rdd_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="rdd_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet">
+
+<script src="rdd_files/libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="rdd_files/libs/lightable-0.0.1/lightable.css" rel="stylesheet">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Fuzzy Regression Discontinuity</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Megha </p>
+          </div>
+  </div>
+    
+    
+  </div>
+  
+
+</header>
+
+<section id="regression-discontinuity" class="level2">
+<h2 class="anchored" data-anchor-id="regression-discontinuity">Regression Discontinuity</h2>
+<p>Assignment to the treatment group is determined through a cut score (e.g., 4000 on Algebra I end of course STAAR scale scores). People above the cut score take and complete Algebra II (treatment) and people below don’t (control). The idea behind RDD is that people right around the cut-score and randomly above or below—like they have been randomly assigned to treatment or control. External validity will be limited because we can only estimate average treatment effect for people near the cut-off. We can’t say what the effect of the treatment is for all the students without extrapolating.</p>
+<section id="sharp-rdd" class="level3">
+<h3 class="anchored" data-anchor-id="sharp-rdd">Sharp RDD</h3>
+<p>If all people above cut-score took and completed Algebra II, and all those below didn’t we would have perfect compliance. We basically need to worry only about who is assigned to treatment versus control.</p>
+</section>
+<section id="fuzzy-rdd" class="level3">
+<h3 class="anchored" data-anchor-id="fuzzy-rdd">Fuzzy RDD</h3>
+<p>However, in our case, you can imagine that not all those who scored above the 4000 cut-point would take and complete Algebra II. They are only more likely to do so. And, not all who scored below 4000 never took Algebra II. So we have non-compliance issue.</p>
+<p>To deal with non-compliance we combine regular RDD with instrumental variables (IV) regression.</p>
+</section>
+</section>
+<section id="example" class="level2">
+<h2 class="anchored" data-anchor-id="example">Example</h2>
+<p>The following is an example data from Causal class. In the data below (from James’s notes):</p>
+<ul>
+<li><p><code>id</code>: unique identifier for each family</p></li>
+<li><p><code>school</code>: unique identifier for the student’s school</p></li>
+<li><p><code>male</code>: indicator variable equal to one if the student is male</p></li>
+<li><p><code>FRL</code>: indicator variable equal to one if the student is eligible for the free/reduced-price lunch program</p></li>
+<li><p><code>ITBS_read_96</code>: student’s score on the reading portion of the Iowa Test of Basic Skills in 3rd grade in 1996. Students scoring less than -1 were assigned to remedial summer school.</p></li>
+<li><p><code>attend_SS</code>: indicator variable equal to one if the student attended summer school</p></li>
+<li><p><code>ITBS_read_97</code>: student’s score on the reading portion of the Iowa Test of Basic Skills in 1997</p></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rddensity)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rdrobust)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(AER)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(clubSandwich)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(kableExtra)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>summer_school <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/summer_school.csv"</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(summer_school)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 4,678
+Columns: 7
+$ id           &lt;dbl&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17…
+$ school       &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
+$ male         &lt;dbl&gt; 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, …
+$ FRL          &lt;dbl&gt; 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, …
+$ ITBS_read_96 &lt;dbl&gt; -0.18207764, 0.07645412, -0.99741097, -1.19872460, -1.641…
+$ attend_SS    &lt;dbl&gt; 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, …
+$ ITBS_read_97 &lt;dbl&gt; -0.364692207, 0.252508945, -0.850805689, 0.002452996, -0.…</code></pre>
+</div>
+</div>
+<section id="sharp-rdd-1" class="level3">
+<h3 class="anchored" data-anchor-id="sharp-rdd-1">Sharp RDD</h3>
+<p>For now lets assume that everyone below the cut score who were assigned to remedial summer school went to summer school.</p>
+<section id="assumptions" class="level4">
+<h4 class="anchored" data-anchor-id="assumptions">Assumptions</h4>
+<p>Before we run RDD, we should check some assumptions.</p>
+<ol type="1">
+<li><p>No tampering of forcing variable. If people who have power to score know about the cut-score beforehand, they could make tamper with the scoring and make more people pass the Algebra I STAAR test (so that districts look good, for example). That is not good for causal inference. So the first step is to check if there is any weird jumps around the cut-off. We create histogram like below and can conclude that there is no evidence of tampering- density is continuous at -1. And, we conduct a formal test using <code>rddensity()</code> function and note that the p value greater than .05 so there is not much evidence that density is discontinuous at the cut score.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># the cutscore is -1</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>cutscore <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">1</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># centering the forcing variable on the cutscore so the cutscore is now 0</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>summer_school <span class="ot">&lt;-</span> summer_school <span class="sc">%&gt;%</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Fi =</span> ITBS_read_96 <span class="sc">-</span> cutscore,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">assigned =</span> <span class="fu">factor</span>(Fi <span class="sc">&lt;</span> <span class="dv">0</span>, <span class="at">exclude =</span> <span class="cn">NA</span>))</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># create a histogram</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(summer_school, <span class="fu">aes</span>(<span class="at">x =</span> ITBS_read_96, <span class="at">fill =</span> <span class="fu">factor</span>(assigned))) <span class="sc">+</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> .<span class="dv">1</span>, <span class="at">center =</span> .<span class="dv">15</span>) <span class="sc">+</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>), <span class="at">colour =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_brewer</span>(<span class="at">type =</span> <span class="st">"qual"</span>, <span class="at">palette =</span> <span class="dv">6</span>) <span class="sc">+</span> </span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">fill =</span> <span class="st">"Assigned"</span>) <span class="sc">+</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="rdd_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># formal test</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">rddensity</span>(summer_school<span class="sc">$</span>ITBS_read_96, <span class="at">c =</span> cutscore))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Manipulation testing using local polynomial density estimation.
+
+Number of obs =       4678
+Model =               unrestricted
+Kernel =              triangular
+BW method =           estimated
+VCE method =          jackknife
+
+c = -1                Left of c           Right of c          
+Number of obs         1262                3416                
+Eff. Number of obs    965                 1279                
+Order est. (p)        2                   2                   
+Order bias (q)        3                   3                   
+BW est. (h)           0.927               0.708               
+
+Method                T                   P &gt; |T|             
+Robust                0.2755              0.7829              
+
+
+P-values of binomial tests (H0: p=0.5).
+
+Window Length / 2          &lt;c     &gt;=c    P&gt;|T|
+0.008                      10      10    1.0000
+0.016                      19      24    0.5424
+0.024                      36      36    1.0000
+0.032                      44      53    0.4168
+0.039                      52      66    0.2313
+0.047                      67      77    0.4534
+0.055                      79      90    0.4419
+0.063                      89      99    0.5117
+0.071                     103     109    0.7314
+0.079                     111     117    0.7406</code></pre>
+</div>
+</div></li>
+<li><p>Check if people near cut-off are close to randomized. Check baseline equivalence.</p></li>
+</ol>
+</section>
+<section id="analysis" class="level4">
+<h4 class="anchored" data-anchor-id="analysis">Analysis</h4>
+<p>For sharp RDD, the following code will select optimal bandwidth and runs the RDD analysis:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>mitt <span class="ot">&lt;-</span> <span class="fu">with</span>(summer_school, </span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>             <span class="fu">rdrobust</span>(<span class="at">y =</span> ITBS_read_97, </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>                      <span class="at">x =</span> <span class="sc">-</span>Fi, </span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>                      <span class="at">c=</span> <span class="dv">0</span>, </span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>                      <span class="at">p =</span> <span class="dv">1</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>                      <span class="at">vce =</span> <span class="st">"hc2"</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>                      <span class="at">cluster =</span> school))</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mitt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Call: rdrobust
+
+Number of Obs.                 4678
+BW type                       mserd
+Kernel                   Triangular
+VCE method                      HC2
+
+Number of Obs.                 3416         1262
+Eff. Number of Obs.            1141          748
+Order est. (p)                    1            1
+Order bias  (q)                   2            2
+BW est. (h)                   0.616        0.616
+BW bias (b)                   1.006        1.006
+rho (h/b)                     0.613        0.613
+Unique Obs.                    3416         1262
+
+=============================================================================
+        Method     Coef. Std. Err.         z     P&gt;|z|      [ 95% C.I. ]       
+=============================================================================
+  Conventional     0.090     0.067     1.330     0.183    [-0.042 , 0.221]     
+        Robust         -         -     0.905     0.366    [-0.084 , 0.228]     
+=============================================================================</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="fuzzy-rdd-1" class="level3">
+<h3 class="anchored" data-anchor-id="fuzzy-rdd-1">Fuzzy RDD</h3>
+<p>If there isn’t prefect compliance, you would run fuzzy rdd like below. With the cut score as the instrument in the instrumental variable regression, actually attending the summer school as the treatment. The <code>rdrobust()</code> function runs two stage least squares regression.</p>
+<section id="assumptions-1" class="level4">
+<h4 class="anchored" data-anchor-id="assumptions-1">Assumptions</h4>
+<p>Here for fuzzy you need to check assumptions for instrumental variables regression as well as those for RDD. The assumptions are local because for RDD we are only estimating effects for students near the cutoff.</p>
+<ol type="1">
+<li><p>Local exclusion restriction - Instrument does not have any effect on outcome other than through treatment. This one we check theoretically.</p></li>
+<li><p>Local monotonicity - No defiers.</p></li>
+<li><p>Treatment effectiveness - Being assigned to treatment increases the probability of treatment receipt. You check that by regressing treatment receipt <code>attend_SS</code> on treatment assignment <code>-Fi</code>, the forcing variable. Below is the first stage test:</p></li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>first_stage <span class="ot">&lt;-</span> <span class="fu">with</span>(summer_school, </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">rdrobust</span>(<span class="at">y =</span> attend_SS, </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>                             <span class="at">x =</span> <span class="sc">-</span>Fi, </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>                             <span class="at">c =</span> <span class="dv">0</span>, </span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>                             <span class="at">p =</span> <span class="dv">1</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>                             <span class="at">vce =</span> <span class="st">"hc2"</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>                             <span class="at">cluster =</span> school))</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(first_stage)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Call: rdrobust
+
+Number of Obs.                 4678
+BW type                       mserd
+Kernel                   Triangular
+VCE method                      HC2
+
+Number of Obs.                 3416         1262
+Eff. Number of Obs.            1012          685
+Order est. (p)                    1            1
+Order bias  (q)                   2            2
+BW est. (h)                   0.549        0.549
+BW bias (b)                   0.874        0.874
+rho (h/b)                     0.628        0.628
+Unique Obs.                    3416         1262
+
+=============================================================================
+        Method     Coef. Std. Err.         z     P&gt;|z|      [ 95% C.I. ]       
+=============================================================================
+  Conventional     0.759     0.031    24.445     0.000     [0.698 , 0.819]     
+        Robust         -         -    20.670     0.000     [0.680 , 0.823]     
+=============================================================================</code></pre>
+</div>
+</div>
+</section>
+<section id="analysis-1" class="level4">
+<h4 class="anchored" data-anchor-id="analysis-1">Analysis</h4>
+<p>Below is the code to run fuzzy RDD using <code>rdrobust()</code>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>mcate <span class="ot">&lt;-</span> <span class="fu">with</span>(summer_school, </span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>              <span class="fu">rdrobust</span>(<span class="at">y =</span> ITBS_read_97, </span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>                       <span class="at">x =</span> <span class="sc">-</span>Fi, </span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>                       <span class="at">c =</span> <span class="dv">0</span>,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>                       <span class="at">p =</span> <span class="dv">1</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>                       <span class="at">fuzzy =</span> attend_SS, </span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>                       <span class="at">vce =</span> <span class="st">"hc2"</span>,</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>                       <span class="at">cluster =</span> school))</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mcate)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Call: rdrobust
+
+Number of Obs.                 4678
+BW type                       mserd
+Kernel                   Triangular
+VCE method                      HC2
+
+Number of Obs.                 3416         1262
+Eff. Number of Obs.            1347          852
+Order est. (p)                    1            1
+Order bias  (q)                   2            2
+BW est. (h)                   0.747        0.747
+BW bias (b)                   1.063        1.063
+rho (h/b)                     0.703        0.703
+Unique Obs.                    3416         1262
+
+=============================================================================
+        Method     Coef. Std. Err.         z     P&gt;|z|      [ 95% C.I. ]       
+=============================================================================
+  Conventional     0.127     0.078     1.639     0.101    [-0.025 , 0.280]     
+        Robust         -         -     0.968     0.333    [-0.096 , 0.283]     
+=============================================================================</code></pre>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="fuzzy-rdd-by-hand" class="level2">
+<h2 class="anchored" data-anchor-id="fuzzy-rdd-by-hand">Fuzzy RDD by Hand</h2>
+<p>The following function is what happens under the hood for fuzzy RDD:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>estimate_mcate <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">dat =</span> summer_school, </span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>                           <span class="at">poly =</span> <span class="dv">1</span>, </span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">factor_mag =</span> <span class="dv">1</span>){</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># select optimal weights for any polynomial   </span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  b <span class="ot">&lt;-</span> <span class="fu">with</span>(dat,</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>            <span class="fu">rdbwselect</span>(<span class="at">y =</span> ITBS_read_97,</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>                       <span class="at">x =</span> Fi,</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>                       <span class="at">vce =</span> <span class="st">"hc2"</span>,</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>                       <span class="at">p =</span> poly,</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>                       <span class="at">fuzzy =</span> attend_SS))</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># extract the bandwidth</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  bandwidth <span class="ot">&lt;-</span> b<span class="sc">$</span>bws[<span class="dv">1</span>]</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>  <span class="co"># multiply for sensitivity analysis</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>  <span class="co"># this will make the bandwidth bigger or smaller</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>  bandwidth <span class="ot">&lt;-</span> bandwidth <span class="sc">*</span> factor_mag</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>  <span class="co"># upper and lower bandwidth</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>  b_lower <span class="ot">&lt;-</span> <span class="sc">-</span>bandwidth</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>  b_upper <span class="ot">&lt;-</span> bandwidth</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>  <span class="co"># subset the data to include units within the bandwidth and create weights</span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>  dat_bw <span class="ot">&lt;-</span> <span class="fu">subset</span>(dat, b_lower <span class="sc">&lt;</span> Fi <span class="sc">&amp;</span> Fi <span class="sc">&lt;</span> b_upper)</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>  dat_bw<span class="sc">$</span>tri_wt <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">-</span> <span class="fu">abs</span>(dat_bw<span class="sc">$</span>Fi) <span class="sc">/</span> b_upper</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>  <span class="co">#  run ivreg based on order of polynomial</span></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>  <span class="co"># however this assumes the outcome is continuous</span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>  <span class="co"># like rdrobust</span></span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>  <span class="co"># but for HB5 most of our outcomes are binary</span></span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>  <span class="co"># which is why I think we are getting some wonky estimates</span></span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(poly <span class="sc">==</span> <span class="dv">1</span>){</span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a>  model <span class="ot">&lt;-</span> <span class="fu">ivreg</span>(ITBS_read_97 <span class="sc">~</span> Fi <span class="sc">+</span> attend_SS <span class="sc">+</span> Fi<span class="sc">:</span>assigned <span class="sc">|</span> Fi <span class="sc">+</span> assigned <span class="sc">+</span> Fi<span class="sc">:</span>assigned, <span class="at">data =</span> dat_bw, <span class="at">weights =</span> tri_wt)</span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>  }  <span class="cf">else</span> <span class="cf">if</span>(poly <span class="sc">==</span> <span class="dv">2</span>){</span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a>  model <span class="ot">&lt;-</span> <span class="fu">ivreg</span>(ITBS_read_97 <span class="sc">~</span> Fi <span class="sc">+</span> <span class="fu">I</span>(Fi<span class="sc">^</span><span class="dv">2</span>) <span class="sc">+</span> attend_SS <span class="sc">+</span> Fi<span class="sc">:</span>assigned <span class="sc">+</span> <span class="fu">I</span>(Fi<span class="sc">^</span><span class="dv">2</span>)<span class="sc">:</span>assigned<span class="sc">|</span></span>
+<span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a>                   Fi <span class="sc">+</span> <span class="fu">I</span>(Fi<span class="sc">^</span><span class="dv">2</span>) <span class="sc">+</span> assigned <span class="sc">+</span> Fi<span class="sc">:</span>assigned <span class="sc">+</span> <span class="fu">I</span>(Fi<span class="sc">^</span><span class="dv">2</span>)<span class="sc">:</span>assigned, <span class="at">data =</span> dat_bw, <span class="at">weights =</span> tri_wt) </span>
+<span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-44"><a href="#cb12-44" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (poly <span class="sc">==</span> <span class="dv">3</span>){</span>
+<span id="cb12-45"><a href="#cb12-45" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb12-46"><a href="#cb12-46" aria-hidden="true" tabindex="-1"></a>    model <span class="ot">&lt;-</span> <span class="fu">ivreg</span>(ITBS_read_97 <span class="sc">~</span> Fi <span class="sc">+</span> <span class="fu">I</span>(Fi<span class="sc">^</span><span class="dv">2</span>) <span class="sc">+</span> <span class="fu">I</span>(Fi<span class="sc">^</span><span class="dv">3</span>) <span class="sc">+</span> attend_SS <span class="sc">+</span> Fi<span class="sc">:</span>assigned <span class="sc">+</span> <span class="fu">I</span>(Fi<span class="sc">^</span><span class="dv">2</span>)<span class="sc">:</span>assigned <span class="sc">+</span> <span class="fu">I</span>(Fi<span class="sc">^</span><span class="dv">3</span>)<span class="sc">:</span> assigned<span class="sc">|</span>Fi <span class="sc">+</span> <span class="fu">I</span>(Fi<span class="sc">^</span><span class="dv">2</span>) <span class="sc">+</span> <span class="fu">I</span>(Fi<span class="sc">^</span><span class="dv">3</span>) <span class="sc">+</span> assigned <span class="sc">+</span> Fi<span class="sc">:</span>assigned <span class="sc">+</span> <span class="fu">I</span>(Fi<span class="sc">^</span><span class="dv">2</span>)<span class="sc">:</span>assigned <span class="sc">+</span> <span class="fu">I</span>(Fi<span class="sc">^</span><span class="dv">3</span>)<span class="sc">:</span> assigned, <span class="at">data =</span> dat_bw, <span class="at">weights =</span> tri_wt) </span>
+<span id="cb12-47"><a href="#cb12-47" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb12-48"><a href="#cb12-48" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb12-49"><a href="#cb12-49" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-50"><a href="#cb12-50" aria-hidden="true" tabindex="-1"></a>  <span class="co"># cluster the se by school</span></span>
+<span id="cb12-51"><a href="#cb12-51" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-52"><a href="#cb12-52" aria-hidden="true" tabindex="-1"></a>  res <span class="ot">&lt;-</span> <span class="fu">coef_test</span>(model, </span>
+<span id="cb12-53"><a href="#cb12-53" aria-hidden="true" tabindex="-1"></a>                   <span class="at">vcov =</span> <span class="st">"CR2"</span>, </span>
+<span id="cb12-54"><a href="#cb12-54" aria-hidden="true" tabindex="-1"></a>                   <span class="at">cluster =</span> dat_bw<span class="sc">$</span>school, </span>
+<span id="cb12-55"><a href="#cb12-55" aria-hidden="true" tabindex="-1"></a>                   <span class="at">tidy =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-56"><a href="#cb12-56" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">bandwidth =</span> bandwidth)</span>
+<span id="cb12-57"><a href="#cb12-57" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-58"><a href="#cb12-58" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(res)</span>
+<span id="cb12-59"><a href="#cb12-59" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-60"><a href="#cb12-60" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-61"><a href="#cb12-61" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>mcate_hand <span class="ot">&lt;-</span> <span class="fu">estimate_mcate</span>()</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>mcate_hand <span class="sc">%&gt;%</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">format =</span> <span class="st">"html"</span>, <span class="at">caption =</span> <span class="st">"MCATE Results"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"bordered"</span>),  <span class="at">full_width =</span> F)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+
+<table class="table table-striped table-bordered" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>MCATE Results</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:left;"> Coef </th>
+   <th style="text-align:right;"> beta </th>
+   <th style="text-align:right;"> SE </th>
+   <th style="text-align:right;"> tstat </th>
+   <th style="text-align:right;"> df_Satt </th>
+   <th style="text-align:right;"> p_Satt </th>
+   <th style="text-align:right;"> bandwidth </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> (Intercept) </td>
+   <td style="text-align:left;"> (Intercept) </td>
+   <td style="text-align:right;"> -0.8567310 </td>
+   <td style="text-align:right;"> 0.0402097 </td>
+   <td style="text-align:right;"> -21.3065627 </td>
+   <td style="text-align:right;"> 35.44731 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0.7106335 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Fi </td>
+   <td style="text-align:left;"> Fi </td>
+   <td style="text-align:right;"> 0.8014338 </td>
+   <td style="text-align:right;"> 0.1059066 </td>
+   <td style="text-align:right;"> 7.5673675 </td>
+   <td style="text-align:right;"> 36.71125 </td>
+   <td style="text-align:right;"> 0.0000000 </td>
+   <td style="text-align:right;"> 0.7106335 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> attend_SS </td>
+   <td style="text-align:left;"> attend_SS </td>
+   <td style="text-align:right;"> 0.1242942 </td>
+   <td style="text-align:right;"> 0.0805343 </td>
+   <td style="text-align:right;"> 1.5433703 </td>
+   <td style="text-align:right;"> 38.41937 </td>
+   <td style="text-align:right;"> 0.1309388 </td>
+   <td style="text-align:right;"> 0.7106335 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Fi:assignedTRUE </td>
+   <td style="text-align:left;"> Fi:assignedTRUE </td>
+   <td style="text-align:right;"> -0.0276748 </td>
+   <td style="text-align:right;"> 0.1703650 </td>
+   <td style="text-align:right;"> -0.1624444 </td>
+   <td style="text-align:right;"> 38.21932 </td>
+   <td style="text-align:right;"> 0.8718117 </td>
+   <td style="text-align:right;"> 0.7106335 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+</div>
+<p>The <code>attend_SS</code> coef matches the one from <code>rdrobust()</code> above.</p>
+<section id="sensitivity" class="level3">
+<h3 class="anchored" data-anchor-id="sensitivity">Sensitivity</h3>
+<p>When running RDD, we need to check if results are robust to different bandwidths and different polynomial specifications. Below is the code to do that:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># different polynomial and bandwidth specifications</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>design_factors <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">poly =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>),</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">factor_mag =</span> <span class="fu">c</span>(.<span class="dv">5</span>, <span class="dv">1</span>, <span class="dv">2</span>)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>) </span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co"># combine into a design set</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>params <span class="ot">&lt;-</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cross_df</span>(design_factors) </span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co"># run sensitivity analysis</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>mcate_results <span class="ot">&lt;-</span> </span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    params <span class="sc">%&gt;%</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">res =</span> <span class="fu">pmap</span>(., <span class="at">.f =</span> estimate_mcate)</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unnest</span>(<span class="at">cols =</span> res)</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="co"># clean the results</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>mcate_results <span class="sc">%&gt;%</span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Coef <span class="sc">==</span> <span class="st">"attend_SS"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(poly) <span class="sc">%&gt;%</span></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">format =</span> <span class="st">"html"</span>, <span class="at">caption =</span> <span class="st">"Sensitivity for MCATE"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"bordered"</span>),  <span class="at">full_width =</span> F)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+
+<table class="table table-striped table-bordered" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>Sensitivity for MCATE</caption>
+ <thead>
+  <tr>
+   <th style="text-align:right;"> poly </th>
+   <th style="text-align:right;"> factor_mag </th>
+   <th style="text-align:left;"> Coef </th>
+   <th style="text-align:right;"> beta </th>
+   <th style="text-align:right;"> SE </th>
+   <th style="text-align:right;"> tstat </th>
+   <th style="text-align:right;"> df_Satt </th>
+   <th style="text-align:right;"> p_Satt </th>
+   <th style="text-align:right;"> bandwidth </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.5 </td>
+   <td style="text-align:left;"> attend_SS </td>
+   <td style="text-align:right;"> 0.1768081 </td>
+   <td style="text-align:right;"> 0.1239215 </td>
+   <td style="text-align:right;"> 1.426776 </td>
+   <td style="text-align:right;"> 36.18805 </td>
+   <td style="text-align:right;"> 0.1622161 </td>
+   <td style="text-align:right;"> 0.3553168 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 1.0 </td>
+   <td style="text-align:left;"> attend_SS </td>
+   <td style="text-align:right;"> 0.1242942 </td>
+   <td style="text-align:right;"> 0.0805343 </td>
+   <td style="text-align:right;"> 1.543370 </td>
+   <td style="text-align:right;"> 38.41937 </td>
+   <td style="text-align:right;"> 0.1309388 </td>
+   <td style="text-align:right;"> 0.7106335 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 2.0 </td>
+   <td style="text-align:left;"> attend_SS </td>
+   <td style="text-align:right;"> 0.1797898 </td>
+   <td style="text-align:right;"> 0.0571533 </td>
+   <td style="text-align:right;"> 3.145746 </td>
+   <td style="text-align:right;"> 39.58091 </td>
+   <td style="text-align:right;"> 0.0031408 </td>
+   <td style="text-align:right;"> 1.4212670 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 0.5 </td>
+   <td style="text-align:left;"> attend_SS </td>
+   <td style="text-align:right;"> 0.2174620 </td>
+   <td style="text-align:right;"> 0.1590693 </td>
+   <td style="text-align:right;"> 1.367090 </td>
+   <td style="text-align:right;"> 33.46836 </td>
+   <td style="text-align:right;"> 0.1807098 </td>
+   <td style="text-align:right;"> 0.3903672 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 1.0 </td>
+   <td style="text-align:left;"> attend_SS </td>
+   <td style="text-align:right;"> 0.1293982 </td>
+   <td style="text-align:right;"> 0.1233622 </td>
+   <td style="text-align:right;"> 1.048929 </td>
+   <td style="text-align:right;"> 36.89573 </td>
+   <td style="text-align:right;"> 0.3010334 </td>
+   <td style="text-align:right;"> 0.7807343 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 2.0 </td>
+   <td style="text-align:left;"> attend_SS </td>
+   <td style="text-align:right;"> 0.1343744 </td>
+   <td style="text-align:right;"> 0.0849269 </td>
+   <td style="text-align:right;"> 1.582235 </td>
+   <td style="text-align:right;"> 38.76238 </td>
+   <td style="text-align:right;"> 0.1217223 </td>
+   <td style="text-align:right;"> 1.5614686 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 0.5 </td>
+   <td style="text-align:left;"> attend_SS </td>
+   <td style="text-align:right;"> 0.2259102 </td>
+   <td style="text-align:right;"> 0.1768711 </td>
+   <td style="text-align:right;"> 1.277259 </td>
+   <td style="text-align:right;"> 32.06215 </td>
+   <td style="text-align:right;"> 0.2106829 </td>
+   <td style="text-align:right;"> 0.4940174 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 1.0 </td>
+   <td style="text-align:left;"> attend_SS </td>
+   <td style="text-align:right;"> 0.1714527 </td>
+   <td style="text-align:right;"> 0.1475946 </td>
+   <td style="text-align:right;"> 1.161646 </td>
+   <td style="text-align:right;"> 35.81678 </td>
+   <td style="text-align:right;"> 0.2530623 </td>
+   <td style="text-align:right;"> 0.9880348 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 2.0 </td>
+   <td style="text-align:left;"> attend_SS </td>
+   <td style="text-align:right;"> 0.1104628 </td>
+   <td style="text-align:right;"> 0.0996686 </td>
+   <td style="text-align:right;"> 1.108300 </td>
+   <td style="text-align:right;"> 38.19759 </td>
+   <td style="text-align:right;"> 0.2746621 </td>
+   <td style="text-align:right;"> 1.9760695 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</section>
+</section>
+<section id="hb5" class="level2">
+<h2 class="anchored" data-anchor-id="hb5">HB5</h2>
+<p>For HB5, the coefficients are looking wonky. The outcomes are binary so the linear probability model should give difference in proportion (e.g., of those who graduate after HB5 vs those who do before). But, I am getting proportions greater than 1 or less than 0 for some models. So need to figure out what is going wrong. One possibility is that linear probability ivreg is not working for the binary outcomes so we need to mess with the function above to run iv probit or iv logit.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      let href = ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
